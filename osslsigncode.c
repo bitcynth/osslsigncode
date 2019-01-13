@@ -20,7 +20,7 @@
 
 */
 
-static const char *rcsid = "$Id: osslsigncode.c,v 1.4 2011/08/12 11:08:12 mfive Exp $";
+static const char *rcsid = "$Id: osslsigncode.c,v 1.5 2019-01-13 12:21:00 cynthia Exp $";
 
 /*
    Implemented with good help from:
@@ -66,6 +66,7 @@ static const char *rcsid = "$Id: osslsigncode.c,v 1.4 2011/08/12 11:08:12 mfive 
 #include <openssl/pkcs12.h>
 #include <openssl/pem.h>
 #include <openssl/asn1t.h>
+#include <openssl/asn1.h>
 
 #ifdef ENABLE_CURL
 #include <curl/curl.h>
@@ -254,7 +255,7 @@ static SpcSpOpusInfo* createOpus(const char *desc, const char *url)
     if (desc) {
         info->programName = SpcString_new();
         info->programName->type = 1;
-        info->programName->value.ascii = M_ASN1_IA5STRING_new();
+        info->programName->value.ascii = ASN1_IA5STRING_new();
         ASN1_STRING_set((ASN1_STRING *)info->programName->value.ascii,
                         (const unsigned char*)desc, strlen(desc));
     }
@@ -262,7 +263,7 @@ static SpcSpOpusInfo* createOpus(const char *desc, const char *url)
     if (url) {
         info->moreInfo = SpcLink_new();
         info->moreInfo->type = 0;
-        info->moreInfo->value.url = M_ASN1_IA5STRING_new();
+        info->moreInfo->value.url = ASN1_IA5STRING_new();
         ASN1_STRING_set((ASN1_STRING *)info->moreInfo->value.url,
                         (const unsigned char*)url, strlen(url));
     }
@@ -512,12 +513,12 @@ static void get_indirect_data_blob(u_char **blob, int *len, const EVP_MD *md, in
     idc->messageDigest->digestAlgorithm->algorithm = OBJ_nid2obj(EVP_MD_nid(md));
     idc->messageDigest->digestAlgorithm->parameters = ASN1_TYPE_new();
     idc->messageDigest->digestAlgorithm->parameters->type = V_ASN1_NULL;
-    idc->messageDigest->digest = M_ASN1_OCTET_STRING_new();
+    idc->messageDigest->digest = ASN1_OCTET_STRING_new();
 
     hashlen = EVP_MD_size(md);
     hash = OPENSSL_malloc(hashlen);   
     memset(hash, 0, hashlen);
-    M_ASN1_OCTET_STRING_set(idc->messageDigest->digest, hash, hashlen);
+    ASN1_OCTET_STRING_set(idc->messageDigest->digest, hash, hashlen);
 
     *len  = i2d_SpcIndirectDataContent(idc, NULL);
     *blob = OPENSSL_malloc(*len);
